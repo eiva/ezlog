@@ -40,14 +40,16 @@ default_log_result = False
 Override default settings to log function result or not.
 '''
 
+
 def __format_args(*args, **kwargs):
     args_str = str()
     kwargs_str = str()
     if len(args) != 0:
         args_str = " with args: {}".format(args)
     if len(kwargs) != 0:
-       kwargs_str = " with kwargs: {}".format(kwargs)
+        kwargs_str = " with kwargs: {}".format(kwargs)
     return args_str + kwargs_str
+
 
 def __wrapper_impl(name, arg_fmt, f, opt, *args, **kwargs):
     log = opt.get("logger", default_logging)
@@ -78,7 +80,7 @@ def __wrapper_impl(name, arg_fmt, f, opt, *args, **kwargs):
         else:
             prefix = "Done"
 
-        if rv == None or not log_result:
+        if rv is None or not log_result:
             log.log(level, "{} '{}'{}".format(prefix, name, mesr_str))
         else:
             log.log(level, "{} '{}', with result: '{}'{}"
@@ -88,46 +90,47 @@ def __wrapper_impl(name, arg_fmt, f, opt, *args, **kwargs):
         log.exception("Done '{}' with exception")
         raise
 
+
 def log_call(**opt):
     '''
     Wrapper to log function call.
     Not applicable to class member logging.
-    
+
     Keyword arguments:
-    
+
      level: int
       Default = ezlog.default_log_level
       Set log level for this call.
-   
+
      one_line: bool
       Default = ezlog.default_one_line_log
       Allow to set different logging style.
       If True - log will be performed after call and looks like:
        'Called 'name', 'args' with result'
       If False - log will be performed before start and after start.
-   
+
      log_arguments: bool
       Default = ezlog.default_log_arguments
       Should log function arguments or not.
-     
+
      log_result: bool
       Default = ezlog.log_result
       Should log function result or not (if possible)
-   
+
      measure: bool
       Default = ezlog.default_performance_measure
       Allow turn on or of performance measuring for this call.
-     
-     logger: 
+
+     logger:
       Default = ezlog.default_logging
-      Specify logger to be used. 
-      Expecting module or class with 
+      Specify logger to be used.
+      Expecting module or class with
        .log(int, str)
        .exception(str) functions.
 
     Example:
     ```python
-    >>> @log_call() # MAke sure you dont forget about ()
+    >>> @log_call() # Make sure you dont forget about ()
     ... def test(a, b):
     ...  print("test call")
     ...  return 4
@@ -140,11 +143,13 @@ def log_call(**opt):
     '''
     def decorator(f):
         name = f.__name__
+
         def log_call_wrapper(*args, **kwargs):
             arg_fmt = __format_args(*args, **kwargs)
             return __wrapper_impl(name, arg_fmt, f, opt, *args, **kwargs)
         return log_call_wrapper
     return decorator
+
 
 def log_member_call(**opt):
     '''

@@ -4,4 +4,4 @@ README.md
 setup.cfg
 setup.py
 ezlog/__init__.py
-ezlog/ezlog.py
+ezlog/wrappers.py

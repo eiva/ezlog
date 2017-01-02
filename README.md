@@ -11,7 +11,7 @@ Simple as `pip3 install ezlog`
 
 To log function call
 ```python
-from ezlog import log_call
+from ezlog.wrappers import log_call
 
 @log_call()
 def test(a, b):
@@ -23,7 +23,7 @@ test(2, "test")
 
 To log class member call
 ```python
-from ezlog import log_member_call
+from ezlog.wrappers import log_member_call
 
  class A:
 	@log_member_call()
