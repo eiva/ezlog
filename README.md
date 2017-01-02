@@ -3,6 +3,10 @@
 Wrappers to make eazy logging of functions and members calls.
 Allow to track parameters, exceptions and performance of functions.
 
+# Installation
+
+Simple as `pip3 install ezlog`
+
 # Some examples on how to use it
 
 To log function call
@@ -29,3 +33,5 @@ from ezlog import log_member_call
 a=A()
 a.test(2, 4, test={"d":"t", "c":"o"})
 ```
+
+# Customization
