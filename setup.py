@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'ezlog',
   packages = ['ezlog'],
-  version = '0.1',
+  version = '0.3',
   description = 'Helpful wrappers for logging',
   author = 'Eugene Ivanchenko',
   author_email = 'ez@eiva.info',

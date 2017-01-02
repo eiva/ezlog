@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>95727fa0-944c-4626-9230-71d50d3fb766</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ezlog\ezlog.py</StartupFile>
+    <StartupFile>ezlog.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,8 +22,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ezlog\ezlog.py" />
-    <Compile Include="ezlog\__init__.py">
+    <Compile Include="ezlog.py" />
+    <Compile Include="__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="setup.py">
@@ -34,7 +34,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="ezlog\" />
     <Folder Include="tests\" />
   </ItemGroup>
   <ItemGroup>
