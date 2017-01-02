@@ -1,0 +1,4 @@
+prune tests
+include *.txt
+include *.md
+include *.cfg 

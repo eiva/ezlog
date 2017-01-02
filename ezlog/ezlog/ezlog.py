@@ -5,6 +5,9 @@ from timeit import default_timer as timer
 # shift-alt-f5
 
 default_log_level = logging.DEBUG
+'''
+Override for default logging level.
+'''
 default_performance_measure = False
 default_logging = logging
 default_eps = 0.001
