@@ -5,7 +5,7 @@ Allow to track parameters, exceptions and performance of functions.
 
 # Installation
 
-Simple as `pip3 install exlog`
+Simple as `pip3 install ezlog`
 
 # Some examples on how to use it
 
