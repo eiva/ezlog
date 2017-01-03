@@ -1,4 +1,4 @@
-import functools
+import inspect
 import logging
 from timeit import default_timer as timer
 
