@@ -81,16 +81,15 @@ def __ending(result, name, arg_fmt, opt, intro_data):
         if delta > default_eps:
             mesr_str = " and took: {}".format(delta)
 
-    if one_line:
-        prefix = "Called '{}'{}".format(name, arg_fmt)
-    else:
-        prefix = "Done"
+    res_str = str()
+    if result and log_result:
+        res_str = ", with result: '{}'".format(result)
 
-    if result is None or not log_result:
-        log.log(level, "{} '{}'{}".format(prefix, name, mesr_str))
+    if one_line:
+        log.log(level, "Called '{}'{}{}{}".
+                format(name, arg_fmt, res_str, mesr_str))
     else:
-        log.log(level, "{} '{}', with result: '{}'{}"
-                .format(prefix, name, result, mesr_str))
+        log.log(level, "Done '{}'{}{}".format(name, res_str, mesr_str))
 
 
 def __exception(log, name):
@@ -102,7 +101,7 @@ def __exception(log, name):
     ex = exc_type(exc_value)
     ex.__traceback__ = exc_traceback
     ex.__cause__ = None
-    log.error("Done '{}' with exception".format(name),
+    log.log(logging.ERROR, "Done '{}' with exception".format(name),
               exc_info=(exc_type, exc_value, exc_traceback))
     return ex
 
@@ -142,7 +141,6 @@ def log_call(**opt):
       Specify logger to be used.
       Expecting module or class with
        .log(int, str)
-       .exception(str) functions.
 
     Example:
     ```python
