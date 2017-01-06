@@ -1,5 +1,8 @@
 import inspect
 import logging
+import traceback
+import sys
+from functools import wraps, update_wrapper, partial  # Todo!
 from timeit import default_timer as timer
 
 
@@ -35,11 +38,10 @@ default_log_arguments = True
 Override default settings to log arguments or not.
 '''
 
-default_log_result = False
+default_log_result = True
 '''
 Override default settings to log function result or not.
 '''
-
 
 def __format_args(*args, **kwargs):
     args_str = str()
@@ -50,46 +52,55 @@ def __format_args(*args, **kwargs):
         kwargs_str = " with kwargs: {}".format(kwargs)
     return args_str + kwargs_str
 
-
-def __wrapper_impl(name, arg_fmt, f, opt, *args, **kwargs):
+def __intro(name, arg_fmt, opt):
     log = opt.get("logger", default_logging)
-    level = opt.get("level", default_log_level)
-    measure = opt.get("measure", default_performance_measure)
-    one_line = opt.get("one_line", default_one_line_log)
     log_arguments = opt.get("log_arguments", default_log_arguments)
-    log_result = opt.get("log_result", default_log_result)
-
+    one_line = opt.get("one_line", default_one_line_log)
+    level = opt.get("level", default_log_level)
     if not log_arguments:
         arg_fmt = str()
 
     if not one_line:
         log.log(level, "Calling '{}'{}:".format(name, arg_fmt))
+    return timer()
+
+def __ending(result, name, arg_fmt, opt, intro_data):
+    log = opt.get("logger", default_logging)
+    level = opt.get("level", default_log_level)
+    measure = opt.get("measure", default_performance_measure)
+    one_line = opt.get("one_line", default_one_line_log)
+    log_result = opt.get("log_result", default_log_result)
+
+    mesr_str = str()
+    if measure:
+        stop = timer()
+        delta = stop - intro_data
+        if delta > default_eps:
+            mesr_str = " and took: {}".format(delta)
+
+    if one_line:
+        prefix = "Called '{}'{}".format(name, arg_fmt)
+    else:
+        prefix = "Done"
+
+    if result is None or not log_result:
+        log.log(level, "{} '{}'{}".format(prefix, name, mesr_str))
+    else:
+        log.log(level, "{} '{}', with result: '{}'{}"
+                .format(prefix, name, result, mesr_str))
+
+def __exception(log, name):
+    exc_type, exc_value, exc_traceback = sys.exc_info()
     try:
-        if measure:
-            start = timer()
-        rv = f(*args, **kwargs)
-        mesr_str = str()
-        if measure:
-            stop = timer()
-            delta = stop - start
-            if delta > default_eps:
-                mesr_str = " and took: {}".format(delta)
-
-        if one_line:
-            prefix = "Call '{}'{} ".format(name, arg_fmt)
-        else:
-            prefix = "Done"
-
-        if rv is None or not log_result:
-            log.log(level, "{} '{}'{}".format(prefix, name, mesr_str))
-        else:
-            log.log(level, "{} '{}', with result: '{}'{}"
-                    .format(prefix, name, rv, mesr_str))
-        return rv
-    except:
-        log.exception("Done '{}' with exception")
-        raise
-
+        exc_traceback = exc_traceback.tb_next
+    except Exception:
+        pass
+    ex = exc_type(exc_value)
+    ex.__traceback__ = exc_traceback
+    ex.__cause__ = None
+    log.error("Done '{}' with exception".format(name), 
+              exc_info=(exc_type, exc_value, exc_traceback))
+    return ex
 
 def log_call(**opt):
     '''
@@ -143,13 +154,20 @@ def log_call(**opt):
     '''
     def decorator(f):
         name = f.__name__
-
+        @wraps(f)
         def log_call_wrapper(*args, **kwargs):
             arg_fmt = __format_args(*args, **kwargs)
-            return __wrapper_impl(name, arg_fmt, f, opt, *args, **kwargs)
+            data = __intro(name, arg_fmt, opt)
+            try:
+                ret = f(*args, **kwargs)
+                __ending(ret, name, arg_fmt, opt, data)
+                return ret
+            except:
+                log = opt.get("logger", default_logging)
+                forward_exception = __exception(log, name)
+                raise forward_exception  # This is wrapper - ignore it
         return log_call_wrapper
     return decorator
-
 
 def log_member_call(**opt):
     '''
@@ -186,9 +204,18 @@ def log_member_call(**opt):
     ```
     '''
     def decorator(f):
+        @wraps(f)
         def log_member_call_wrapper(slf, *args, **kwargs):
             name = "{}.{}".format(slf.__class__.__qualname__, f.__name__)
             arg_fmt = __format_args(*args, **kwargs)
-            return __wrapper_impl(name, arg_fmt, f, opt, slf, *args, **kwargs)
+            data = __intro(name, arg_fmt, opt)
+            try:
+                ret = f(slf, *args, **kwargs) # Calling wrapped function
+                __ending(ret, name, arg_fmt, opt, data)
+                return ret
+            except:
+                log = opt.get("logger", default_logging)
+                forward_exception = __exception(log, name)
+                raise forward_exception  # This is wrapper - ignore it
         return log_member_call_wrapper
     return decorator

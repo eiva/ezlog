@@ -24,3 +24,37 @@ if __name__ == '__main__':
     a.test(2, 4, test={"d": "t", "c": "o"})
 
     test(1, 2)
+
+"""
+default_log_level = logging.ERROR
+
+
+@log_call() # Make sure you dont forget about ()
+def test(a, b):
+    print("A")
+    raise Exception
+    return 4
+
+def a():
+    test(2, "test")
+
+#a()
+test(2, 2)
+
+
+print("-----------")
+class A(object):
+    @log_member_call()
+    def a(self):
+        raise Exception("test")
+    def b(self):
+        raise Exception("test")
+try:
+    A().a()
+except Exception as e:
+    print("Catched")
+    raise
+    
+
+print("-----------")
+"""
