@@ -43,6 +43,7 @@ default_log_result = True
 Override default settings to log function result or not.
 '''
 
+
 def __format_args(*args, **kwargs):
     args_str = str()
     kwargs_str = str()
@@ -51,6 +52,7 @@ def __format_args(*args, **kwargs):
     if len(kwargs) != 0:
         kwargs_str = " with kwargs: {}".format(kwargs)
     return args_str + kwargs_str
+
 
 def __intro(name, arg_fmt, opt):
     log = opt.get("logger", default_logging)
@@ -63,6 +65,7 @@ def __intro(name, arg_fmt, opt):
     if not one_line:
         log.log(level, "Calling '{}'{}:".format(name, arg_fmt))
     return timer()
+
 
 def __ending(result, name, arg_fmt, opt, intro_data):
     log = opt.get("logger", default_logging)
@@ -89,6 +92,7 @@ def __ending(result, name, arg_fmt, opt, intro_data):
         log.log(level, "{} '{}', with result: '{}'{}"
                 .format(prefix, name, result, mesr_str))
 
+
 def __exception(log, name):
     exc_type, exc_value, exc_traceback = sys.exc_info()
     try:
@@ -98,9 +102,10 @@ def __exception(log, name):
     ex = exc_type(exc_value)
     ex.__traceback__ = exc_traceback
     ex.__cause__ = None
-    log.error("Done '{}' with exception".format(name), 
+    log.error("Done '{}' with exception".format(name),
               exc_info=(exc_type, exc_value, exc_traceback))
     return ex
+
 
 def log_call(**opt):
     '''
@@ -154,6 +159,7 @@ def log_call(**opt):
     '''
     def decorator(f):
         name = f.__name__
+
         @wraps(f)
         def log_call_wrapper(*args, **kwargs):
             arg_fmt = __format_args(*args, **kwargs)
@@ -168,6 +174,7 @@ def log_call(**opt):
                 raise forward_exception  # This is wrapper - ignore it
         return log_call_wrapper
     return decorator
+
 
 def log_member_call(**opt):
     '''
@@ -210,7 +217,7 @@ def log_member_call(**opt):
             arg_fmt = __format_args(*args, **kwargs)
             data = __intro(name, arg_fmt, opt)
             try:
-                ret = f(slf, *args, **kwargs) # Calling wrapped function
+                ret = f(slf, *args, **kwargs)  # Calling wrapped function
                 __ending(ret, name, arg_fmt, opt, data)
                 return ret
             except:
