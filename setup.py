@@ -11,7 +11,7 @@ setup(
     package_dir={
         'ezlog': 'ezlog',
     },
-    version='0.7',
+    version='0.8',
     license="MIT license",
     description='Helpful wrappers for logging',
     long_description=readme,

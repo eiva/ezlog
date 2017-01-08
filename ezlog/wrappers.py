@@ -4,6 +4,7 @@ import traceback
 import sys
 from functools import wraps, update_wrapper, partial  # Todo!
 from timeit import default_timer as timer
+from typing import Callable, Any, TypeVar, cast
 
 
 default_log_level = logging.DEBUG
@@ -43,8 +44,13 @@ default_log_result = True
 Override default settings to log function result or not.
 '''
 
+TFun = TypeVar('TFun', bound=Callable[..., Any])
+'''
+Typedef for callback type checking.
+'''
 
-def __format_args(*args, **kwargs):
+
+def _format_args(*args: Any, **kwargs: Any) -> str:
     args_str = str()
     kwargs_str = str()
     if len(args) != 0:
@@ -54,7 +60,7 @@ def __format_args(*args, **kwargs):
     return args_str + kwargs_str
 
 
-def __intro(name, arg_fmt, opt):
+def _intro(name: str, arg_fmt: str, opt: Any) -> Any:
     log = opt.get("logger", default_logging)
     log_arguments = opt.get("log_arguments", default_log_arguments)
     one_line = opt.get("one_line", default_one_line_log)
@@ -67,7 +73,9 @@ def __intro(name, arg_fmt, opt):
     return timer()
 
 
-def __ending(result, name, arg_fmt, opt, intro_data):
+def _ending(result: Any, name: str,
+            arg_fmt: str, opt: Any,
+            intro_data: Any) -> None:
     log = opt.get("logger", default_logging)
     level = opt.get("level", default_log_level)
     measure = opt.get("measure", default_performance_measure)
@@ -92,7 +100,7 @@ def __ending(result, name, arg_fmt, opt, intro_data):
         log.log(level, "Done '{}'{}{}".format(name, res_str, mesr_str))
 
 
-def __exception(log, name):
+def _exception(log: Any, name: str) -> BaseException:
     exc_type, exc_value, exc_traceback = sys.exc_info()
     try:
         exc_traceback = exc_traceback.tb_next
@@ -102,11 +110,11 @@ def __exception(log, name):
     ex.__traceback__ = exc_traceback
     ex.__cause__ = None
     log.log(logging.ERROR, "Done '{}' with exception".format(name),
-              exc_info=(exc_type, exc_value, exc_traceback))
+            exc_info=(exc_type, exc_value, exc_traceback))
     return ex
 
 
-def log_call(**opt):
+class log_call(object):
     '''
     Wrapper to log function call.
     Not applicable to class member logging.
@@ -155,26 +163,29 @@ def log_call(**opt):
     DEBUG:root:Done 'test' with result '4'
     ```
     '''
-    def decorator(f):
+
+    def __init__(self, **kwargs: Any) -> None:
+        self._opt = kwargs
+
+    def __call__(self, f: TFun) -> TFun:
         name = f.__name__
 
         @wraps(f)
-        def log_call_wrapper(*args, **kwargs):
-            arg_fmt = __format_args(*args, **kwargs)
-            data = __intro(name, arg_fmt, opt)
+        def log_call_wrapper(*args, **kwargs) -> Any:
+            arg_fmt = _format_args(*args, **kwargs)
+            data = _intro(name, arg_fmt, self._opt)
             try:
                 ret = f(*args, **kwargs)
-                __ending(ret, name, arg_fmt, opt, data)
+                _ending(ret, name, arg_fmt, self._opt, data)
                 return ret
             except:
-                log = opt.get("logger", default_logging)
-                forward_exception = __exception(log, name)
+                log = self._opt.get("logger", default_logging)
+                forward_exception = _exception(log, name)
                 raise forward_exception  # This is wrapper - ignore it
-        return log_call_wrapper
-    return decorator
+        return cast(TFun, log_call_wrapper)
 
 
-def log_member_call(**opt):
+class log_member_call(object):
     '''
     Log call of class member function.
     (Not applicable for static or non class functions).
@@ -208,19 +219,21 @@ def log_member_call(**opt):
     CRITICAL:root:Done 'Test.test'
     ```
     '''
-    def decorator(f):
+    def __init__(self, **kwargs: Any) -> None:
+        self._opt = kwargs
+
+    def __call__(self, f: TFun) -> TFun:
         @wraps(f)
-        def log_member_call_wrapper(slf, *args, **kwargs):
+        def log_member_call_wrapper(slf: Any, *args, **kwargs) -> Any:
             name = "{}.{}".format(slf.__class__.__qualname__, f.__name__)
-            arg_fmt = __format_args(*args, **kwargs)
-            data = __intro(name, arg_fmt, opt)
+            arg_fmt = _format_args(*args, **kwargs)
+            data = _intro(name, arg_fmt, self._opt)
             try:
                 ret = f(slf, *args, **kwargs)  # Calling wrapped function
-                __ending(ret, name, arg_fmt, opt, data)
+                _ending(ret, name, arg_fmt, self._opt, data)
                 return ret
             except:
-                log = opt.get("logger", default_logging)
-                forward_exception = __exception(log, name)
+                log = self._opt.get("logger", default_logging)
+                forward_exception = _exception(log, name)
                 raise forward_exception  # This is wrapper - ignore it
-        return log_member_call_wrapper
-    return decorator
+        return cast(TFun, log_member_call_wrapper)
